@@ -1,8 +1,13 @@
-% implementazione dell'algoritmo di Naive Bayes - classificatore
+%     Implementazione dell'algoritmo di Naive Bayes - classificatore
+%     durante la diretta sul canale YouTube "Tutor Island"
+%
+%     Link al video con la spiegazione del codice in diretta, durante la scrittura:
+%       https://youtu.be/sur_DsDE4z0
 
-% Per informazioni sul codice, sull'algoritmo di Naive Bayes,
-% per supporto nei tuoi studi ingegneristici,
-% contattami:
+
+%  Per informazioni sul codice, sull'algoritmo di Naive Bayes,
+%  per supporto nei tuoi studi ingegneristici,
+%   contattami:
 %				contact.tutorisland@gmail.com
 %
 % Con oltre 10 anni di esperienza nel supporto a studenti di varie facolta'
@@ -11,26 +16,28 @@
 %
 % Offro consulenze per la tua carriera accademica e consulenze tecniche
 % ingegneristiche in ambito di Modellazione Numerica.
-% Contattami:
+%   Contattami:
 %				contact.tutorisland@gmail.com
 
 % Questo codice e' stato sviluppato durante una diretta sul canale
 % YouTube "Tutor Island":
 % https://www.youtube.com/channel/UCKkzN06obaHk8mt3iBTp6qw?sub_confirmation=1
 %
-% Link al video con la spiegazione del codice:
-% 
+% Link alla repository con questo codice:
+% https://github.com/TutorIsland/ML_Algos/tree/master/NaiveBayes
+
 
 % in colonna ciascuna persona
 %
 %   1    /   0
+%
 % felice / triste
-% ha finito di studiare / non ha finito di studiare
-% sole / piogga
+% ha finito di studiare, per oggi / non ha ancora finito di studiare
+% fuori c'e' il sole / fuori piove
 A = [1 0 0 1 1;
      1 1 0 1 0;
      0 0 1 1 0];
-y = [1 0 0 1 1]; % la persona esce di casa (1) o no (0) ?
+y = [1 0 0 1 1]; % la persona esce di casa (1) o no (0)
 
 
 % nuovo caso di cui voglio sapere la probabilita' che la persona che si trova
@@ -43,7 +50,7 @@ N = columns(A);
 M = rows(A);
 
 
-%% CASO DI POSITIVO
+%% PROBABILITA' DI ESITO POSITIVO
 
 c = 1; % la persona decide di uscire
 N_c = sum( y == c );
@@ -61,7 +68,7 @@ end
 p_pos_prop = produttoria/(p_c^(M-1)); %%%%
 
 
-%% CASO DI NEGATIVO
+%% PROBABILITA' DI ESITO NEGATIVO
 
 c = 0; % la persona decide di NON uscire
 N_c = sum( y == c );
@@ -86,13 +93,13 @@ p_neg = 1 - p_pos
 percentuale_pos = p_pos*100;
 
 threshold = 0.5;
-printf("  ###  TUTOR ISLAND  ###\n");
-printf("  L'algoritmo dice che probabilmente la persona uscira' di casa: ");
-if (p_pos > threshold)
-	printf("si'!\n");
-else
-	printf("no!\n");
+printf("  ###  Segui  TUTOR ISLAND  su YouTube !  ###\n");
+printf("    - Analisi Completata: le condizioni sono state valutate -\n");
+printf("    L'algoritmo dice che, date le condizioni considerate, probabilmente la persona ");
+if (p_pos < threshold)
+	printf("non ");
 end
-printf(" %s%% %f\n", " La probabilita' di uscire di casa calcolata e': ", percentuale_pos);
+printf("uscira' di casa.\n");
+printf("   %s%% %f.\n", " La probabilita' di uscire di casa calcolata e': ", percentuale_pos);
 
-printf("  ### per informazioni e supporto nei tuoi studi: contact.tutorisland@gmail.com\n");
+printf("  ### --> per informazioni e supporto nei tuoi studi: contact.tutorisland@gmail.com\n");
