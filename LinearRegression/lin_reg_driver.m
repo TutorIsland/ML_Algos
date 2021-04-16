@@ -25,16 +25,19 @@
 %   - se alpha diventa troppo piccolo:
 %	  - viene risettato
 %	  - si procede con una valori random per theta
+% 15/4/21, Tutor Island
+% - refactor del codice da procedurale, ad oggetti: classe Linear_Regressor
 
 close all;
 %clear all;
 
 % mi aspetto che l'algoritmo trovi:
 % theta0 = 0; theta1 = 1
-%
-%x = [1. 2.]'; % 2 examples
-%y = [1. 2.]';
+
+x = [1. 2.]'; % 2 examples
+y = [1. 2.]';
 
 tol = 1e-4;
-[theta n_iter] = train_lin_reg(x, y, tol)
+lr = Linear_Regressor(tol);
+[theta, n_iter] = lr.train_lin_reg(x, y);
 % TODO implement some fancy plotting function and call it here

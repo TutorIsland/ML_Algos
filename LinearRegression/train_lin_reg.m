@@ -1,24 +1,23 @@
-% A partire dal dataset in input (feature x, outcome noti y),
-% usa una tolleranza tol per calcolare i valori migliori di
-% theta per approssimare il dataset con una retta, con
-% intercetta pari a theta(1) e coeff. ang. pari a theta(2).
-% Implementa l'algoritmo "Linear Regression", usando
-% il "Gradient Descent" ed una funzione di costo J convessa
-% quadratica.
-%
-% Restituisce:
-% - theta: i valori theta0 e theta1 calcolati nella fase di training
-% - n_iter: numero di iterazioni necessarie con l'ultimo seed testato
-
 function [theta, n_iter] = train_lin_reg(x, y, tol)
-	m = length(x); % numero di examples nel mio dataset
+    %TRAIN_LIN_REG Learn using Linear Regression
+    % A partire dal dataset in input (feature x, outcome noti y),
+    % usa una tolleranza tol per calcolare i valori migliori di
+    % theta per approssimare il dataset con una retta, con
+    % intercetta pari a theta(1) e coeff. ang. pari a theta(2).
+    % Implementa l'algoritmo "Linear Regression", usando
+    % il "Gradient Descent" ed una funzione di costo J convessa
+    % quadratica.
+    %
+    % Restituisce:
+    % - theta: i valori theta0 e theta1 calcolati nella fase di training
+    % - n_iter: numero di iterazioni necessarie con l'ultimo seed testato
 
-	% nota sul learning factor
+    % nota sul learning factor
 	% ------------------------
 	% - se l'algoritmo mi porta a J crescenti, devo ridurre alpha;
 	% - se l'algoritmo converge molto lentamente, potrei aumentare alpha.
 
-	[alpha theta J_prev gradJ_ max_iter alpha_min alpha_reducing_factor] = init_learning_params(tol);
+	[alpha, theta, J_prev, gradJ_, max_iter, alpha_min, alpha_reducing_factor] = init_learning_params(tol);
 
 	n_iter = 0; % considering possible seed resets
 
@@ -50,8 +49,11 @@ function [theta, n_iter] = train_lin_reg(x, y, tol)
 		% - altrimenti
 		%   - riduci alpha
 		% 	- aggiorna J_prev al J appena calcolato
-		[alpha theta J_prev] = check_gradient_descent(J, J_prev, alpha, alpha_min, alpha_reducing_factor, theta);
-
-		n_iter++;
+		[alpha, theta, J_prev, cont] = check_gradient_descent(J, J_prev, alpha, alpha_min, alpha_reducing_factor, theta);
+        if (cont)
+            continue;
+        end
+        
+		n_iter = n_iter + 1;
 	end % fine del while loop
 end
