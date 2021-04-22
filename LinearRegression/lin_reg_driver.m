@@ -27,17 +27,27 @@
 %	  - si procede con una valori random per theta
 % 15/4/21, Tutor Island
 % - refactor del codice da procedurale, ad oggetti: classe Linear_Regressor
+% 22/4/21, Tutor Island
+% - refactor:
+%       . aggiunte properties (variabili d'oggetto), al posto di
+%       restituirle dalle function
+%       . specifica delle 'properties attribute' e 'methods attribute'
+%       . specifica delle 'validation functions' per alcune properties
+%       . Linear_Regressor ora eredita dalla classe 'handle', dunque
+%       restituisce un handle all'oggetto, anziche' copiarlo: questo rende
+%       possibile memorizzare i valori di theta ed n_iter a fine
+%       apprendimento
+%       . trovato il modo per aver properties private (GetAccess=private),
+%       e C-like const (SetAccess=immutable)
 
 close all;
-%clear all;
 
 % mi aspetto che l'algoritmo trovi:
 % theta0 = 0; theta1 = 1
-
 x = [1. 2.]'; % 2 examples
 y = [1. 2.]';
 
 tol = 1e-4;
 lr = Linear_Regressor(tol);
-[theta, n_iter] = lr.train_lin_reg(x, y);
+[theta, n_iter] = lr.learn(x, y);
 % TODO implement some fancy plotting function and call it here

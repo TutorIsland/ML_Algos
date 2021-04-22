@@ -1,24 +1,67 @@
-classdef Linear_Regressor
-    %LINEAR_REGRESSOR Train the Linear Regression using dataset
+classdef Linear_Regressor < handle
+    %LINEAR_REGRESSOR Performs Linear Regression over a dataset
     %   Given the dataset with examples and known outcomes,
     %   performs the training, learning the parameter theta.
     %   Can perform prediction, 
-    %   TODO implement plotting facilities (Gradient Descent, Predictions,
-    %   raw dataset)
+    %
+    %   TODO implement plotting facilities (for Gradient Descent, Predictions,
+    %   raw dataset, new points, ...)
+    %
+    %   TODO update the computations so that the regressors will also work
+    %   on datasets with more than 1 feature - predict is ready for that
     
-    properties
+    % costanti, settate durante l'inizializzazione dell'oggetto dal
+    % constructor
+    properties (SetAccess=immutable)
         tol;
     end
     
+    % this is how I declare C-like 'const's properties which are also private
+    properties (SetAccess=immutable,GetAccess=private)
+       max_iter = 10000;
+       alpha_min = 1e-8;
+       alpha_reducing_factor = 2.;
+    end
+    
+    properties (Access=private)
+        x (:,1) double {mustBeReal, mustBeFinite};
+        y (:,1) double {mustBeReal, mustBeFinite};
+        n_data {mustBeFinite, mustBeInteger};
+    end
+    
+    % can only be set from within class (not even subclass)
+    % can be read from anywhere
+    properties (SetAccess=private,GetAccess=public)
+        % the solution
+        theta (:,1) double {mustBeFinite, mustBeReal};
+        % number of iterations performed to reach the solution
+        n_iter (1,1) {mustBeFinite, mustBeInteger};
+    end
+    
     methods
+        % implement setters and getters to code specific behaviour
+        % e.g. to implement lazy instantiation (getter), which means
+        %      "do not instantiate until requested"
+        %
+        function theta = get.theta(obj)
+%             disp('someone requested theta');
+            theta = obj.theta;
+        end
+        function set.theta(this, t) % the instance can be called 'whatever'
+%             disp('theta was set');
+            this.theta = t;
+        end
+    end
+
+    methods (Access=public)
         function obj = Linear_Regressor(tol)
             %LINEAR_REGRESSOR Construct an instance of this class
             %   Detailed explanation goes here
             obj.tol = tol;
         end
-              
-        function [theta, n_iter] = train_lin_reg(obj, x, y)
-            %TRAIN_LIN_REG Learn using Linear Regression
+
+        function [theta, n_iter] = learn(obj, x, y)
+            %LEARN Learn using Linear Regression
             % A partire dal dataset in input (feature x, outcome noti y),
             % usa una tolleranza tol per calcolare i valori migliori di
             % theta per approssimare il dataset con una retta, con
@@ -30,19 +73,23 @@ classdef Linear_Regressor
             % Restituisce:
             % - theta: i valori theta0 e theta1 calcolati nella fase di training
             % - n_iter: numero di iterazioni necessarie con l'ultimo seed testato
-
+            
             % nota sul learning factor
             % ------------------------
             % - se l'algoritmo mi porta a J crescenti, devo ridurre alpha;
             % - se l'algoritmo converge molto lentamente, potrei aumentare alpha.
 
-            [alpha, theta, J_prev, gradJ_, max_iter, alpha_min, alpha_reducing_factor] = obj.init_learning_params();
+            obj.x = x;
+            obj.y = y;
+            obj.n_data = length(x);
+            
+            [alpha, theta, J_prev, gradJ_] = obj.init_learning_params();
 
             n_iter = 0; % considering possible seed resets
 
             while ( ~ obj.min_reached(gradJ_) )
 
-                if (n_iter > max_iter)
+                if (n_iter > obj.max_iter)
                     error("max iter reached - no convergence!");
                 end
 
@@ -58,25 +105,19 @@ classdef Linear_Regressor
                 % calcolo del costo J, per questa scelta di theta0 e theta1
                 J = obj.costJ(diff_hy);
 
-                % controllo sul costo dovuto a questi valori di theta0 e theta1
-                %
-                % se il costo e' aumentato rispetto alla precedente iterazione:
-                % - se alpha e' diventata piccolissima:
-                % 	- risetta alpha al suo valore iniziale
-                %   - procedi con un seed diverso
-                %	- risetta J_prev al massimo valore possibile
-                % - altrimenti
-                %   - riduci alpha
-                % 	- aggiorna J_prev al J appena calcolato
-                [alpha, theta, J_prev, cont] = obj.check_gradient_descent(J, J_prev, alpha, alpha_min, alpha_reducing_factor, theta);
+                [alpha, theta, J_prev, cont] = obj.check_gradient_descent(J, J_prev, alpha, theta);
                 if (cont)
                     continue;
                 end
 
                 n_iter = n_iter + 1;
-            end % fine del while loop
+            end
+            obj.theta = theta;
+            obj.n_iter = n_iter;
         end
-
+    end
+    
+    methods (Access=private) 
         function [J] = costJ(~, diff_hy)
             %COSTJ Compute cost
             m = length(diff_hy);
@@ -99,10 +140,14 @@ classdef Linear_Regressor
         end        
         
         function [h] = predict(~, theta, x)
-            %PREDICT Predict outcome of x
+            %PREDICT Predict outcomes of x
             % Calcola il valore delle prediction,
             % dati i valori di theta (intercetta e coeff. ang.)
             % e degli examples x.
+            % Vectorized computation. Returns an array of predctions,
+            % one for each element of x. x can be a matrix, if more than
+            % one feature is present in the dataset. TODO update the
+            % remaining code!
             %
             % La function si aspetta che x sia un vettore colonna di m elementi
             % e theta sia un vettore colonna di 2 elementi [theta0 theta1]'.
@@ -121,9 +166,8 @@ classdef Linear_Regressor
             yn = (abs(gradJ_(1)) < obj.tol) && (abs(gradJ_(2)) < obj.tol);
         end
 
-        
         % TODO turn these params into properties
-        function [alpha, theta, J_prev, gradJ_, max_iter, alpha_min, alpha_reducing_factor] = init_learning_params(obj)
+        function [alpha, theta, J_prev, gradJ_] = init_learning_params(obj)
             %INIT_LEARNING_PARAMS Initialize parameters
             % Initializes the value for
             % alpha: learning rate used during Gradient Descent
@@ -133,40 +177,30 @@ classdef Linear_Regressor
             theta = rand(2,1);
             % setta J_prev al valore piu' grande rappresentabile
             J_prev = realmax;
+            % setta gradiente di J ad un valore suff. grande per entrare
+            % nel while loop di learn
             gradJ_ = [2.*obj.tol 2.*obj.tol]';
-            % these params can eventually be exposed in the API
-            max_iter = 10000;
-            alpha_min = 1e-8;
-            alpha_reducing_factor = 2.;
         end
 
-
-        
-        function [alpha, theta, J_prev, cont] = check_gradient_descent(obj, J, J_prev, alpha, alpha_min, alpha_reducing_factor, theta)
+        function [alpha, theta, J_prev, cont] = check_gradient_descent(obj, J, J_prev, alpha, theta)
             %CHECK_GRADIENT_DESCENT Check that cost J is decreasing
             %   Checks whether gradient descent is actually happening:
-            %   if cost J is increasing, instead of decreasing,
+            %   if cost J is increasing, instead of decreasing (as desired for proper gradient descent),
             %   learning rate is reduced.
             %   If learning rate is already small enough,
             %   learning parameters are initialized and code continues to next iteration
-            %   of the while loop - this function is "tied" to train_lin_reg.m .
+            %   of the while loop.
             cont = false;
             if (J > J_prev)
-                if (alpha < alpha_min)
+                if (alpha < obj.alpha_min)
                     [alpha, theta, J_prev] = obj.init_learning_params();
                     cont = true;
-        % 			continue;
                     return;
                 else
-                    alpha = alpha/alpha_reducing_factor;
+                    alpha = alpha/obj.alpha_reducing_factor;
                 end
-            else
-        % 		alpha = alpha;
             end
-        % 	theta = theta;
             J_prev = J;
         end
-
     end
 end
-
